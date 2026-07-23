@@ -1,0 +1,57 @@
+experiment:
+  name: relo_ale_ram
+  algo: relo
+  env_name: ale_breakout_ram
+  seed: 0
+  logdir: logs_ale_ram
+
+env:
+  type: ale
+  id: ALE/Breakout-v5
+  obs_scale: 255.0
+  kwargs:
+    obs_type: ram
+    frameskip: 4
+    repeat_action_probability: 0.0
+    full_action_space: false
+
+system:
+  device: auto
+
+training:
+  num_frames: 2000000
+  batch_size: 32
+  replay_capacity: 50000
+  replay_start_size: 1000
+  gamma: 0.99
+  learning_rate: 0.00025
+  rmsprop_alpha: 0.95
+  rmsprop_eps: 0.01
+  target_update_freq: 1000
+  target_tau: 1.0
+  train_freq: 1
+  eps_start: 1.0
+  eps_end: 0.1
+  eps_decay_frames: 20000
+  hidden_dim: 256
+  hidden_layers: 2
+  max_grad_norm: 10.0
+  reward_clip: 1.0
+  console_log_every: 20
+
+prioritization:
+  alpha: 0.6
+  beta0: 0.4
+  eps: 1.0e-5
+  max_priority: 10.0
+
+fluid:
+  das_gamma: 1.0
+  das_decay: 0.0
+  density_k: 8
+  density_sigma: 1.0
+  density_sample_size: 64
+  prune_candidates: 64
+
+logging:
+  log_every: 1000

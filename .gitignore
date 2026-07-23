@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+build/
+dist/
+
+# Environments and local configuration
+.env
+.env.*
+.venv/
+venv/
+env/
+.conda/
+
+# Experiment artifacts
+logs*/
+runs/
+results/
+checkpoints/
+wandb/
+events.out.tfevents*
+*.pt
+*.pth
+*.ckpt
+*.npy
+*.npz
+*.pkl
+*.log
+stdout.txt
+stderr.txt
+
+# Generated analysis artifacts
+figures/
+*.csv
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini

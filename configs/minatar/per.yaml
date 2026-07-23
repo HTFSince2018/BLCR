@@ -1,0 +1,49 @@
+experiment:
+  name: per_minatar
+  algo: per
+  game: breakout
+  seed: 0
+  logdir: logs
+
+system:
+  device: auto
+
+training:
+  num_frames: 5000000
+  batch_size: 32
+  replay_capacity: 100000
+  replay_start_size: 5000
+  gamma: 0.99
+  learning_rate: 0.00025
+  rmsprop_alpha: 0.95
+  rmsprop_eps: 0.01
+  target_update_freq: 1000
+  target_tau: 1.0
+  train_freq: 1
+  eps_start: 1.0
+  eps_end: 0.1
+  eps_decay_frames: 100000
+  hidden_dim: 128
+  max_grad_norm: 10.0
+  console_log_every: 100
+
+prioritization:
+  alpha: 0.6
+  beta0: 0.4
+  eps: 1.0e-5
+
+fluid:
+  scl_eps: 1.0e-5
+  scl_min_gate: 0.0
+  avgd_lambda: 0.0
+  policy_temperature: 1.0
+  use_das: false
+  das_gamma: 1.0
+  das_decay: 0.0
+  density_k: 8
+  density_sigma: 1.0
+  density_sample_size: 64
+  prune_candidates: 64
+
+logging:
+  log_every: 5000

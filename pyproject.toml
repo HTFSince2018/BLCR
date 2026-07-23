@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "blcr-rl"
+version = "0.1.0"
+description = "Reference implementation of Balanced Learnability-Coverage Replay (BLCR)."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "MinAtar>=1.0.15",
+    "numpy>=1.24",
+    "PyYAML>=6.0",
+    "tensorboard>=2.14",
+    "torch>=2.1",
+    "tqdm>=4.66",
+    "gymnasium>=1.0,<2.0",
+]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["fluid*"]

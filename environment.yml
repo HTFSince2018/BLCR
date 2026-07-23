@@ -1,0 +1,18 @@
+name: BLCR
+channels:
+  - pytorch
+  - conda-forge
+dependencies:
+  - python=3.11
+  - numpy>=1.24
+  - pyyaml>=6.0
+  - pytorch>=2.1
+  - tensorboard>=2.14
+  - tqdm>=4.66
+  - pip
+  - pip:
+      - MinAtar>=1.0.15
+      - gymnasium[mujoco,atari,box2d]>=1.0,<2.0
+      - ale-py>=0.10
+      - autorom[accept-rom-license]>=0.6.1
+      - swig>=4.2
