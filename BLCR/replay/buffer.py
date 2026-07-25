@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import numpy as np
 import torch
 
-from fluid.replay.sum_tree import SumTree
+from BLCR.replay.sum_tree import SumTree
 
 
 @dataclass

@@ -12,13 +12,13 @@ import torch.nn.functional as f
 import torch.optim as optim
 from tqdm import tqdm
 
-from fluid.config import load_config, parse_override, set_by_dotted_key
-from fluid.models.q_network import MinAtarQNetwork
-from fluid.modules.avgd import compute_avgd_penalty
-from fluid.modules.scl import CountNoveltyTracker, TargetVarianceTracker, compute_phi
-from fluid.replay.buffer import DensityAwarePrioritizedReplay
-from fluid.utils.logging import Logger
-from fluid.utils.seed import set_seed
+from BLCR.config import load_config, parse_override, set_by_dotted_key
+from BLCR.models.q_network import MinAtarQNetwork
+from BLCR.modules.avgd import compute_avgd_penalty
+from BLCR.modules.scl import CountNoveltyTracker, TargetVarianceTracker, compute_phi
+from BLCR.replay.buffer import DensityAwarePrioritizedReplay
+from BLCR.utils.logging import Logger
+from BLCR.utils.seed import set_seed
 
 
 def create_minatar_env(env_cls, game: str, seed: int):

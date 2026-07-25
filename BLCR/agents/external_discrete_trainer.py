@@ -12,12 +12,12 @@ import torch
 import torch.nn.functional as f
 import torch.optim as optim
 
-from fluid.config import load_config, parse_override, set_by_dotted_key
-from fluid.envs import make_external_discrete_env
-from fluid.models.vector_q_network import VectorQNetwork
-from fluid.replay.buffer import DensityAwarePrioritizedReplay
-from fluid.utils.logging import Logger
-from fluid.utils.seed import set_seed
+from BLCR.config import load_config, parse_override, set_by_dotted_key
+from BLCR.envs import make_external_discrete_env
+from BLCR.models.vector_q_network import VectorQNetwork
+from BLCR.replay.buffer import DensityAwarePrioritizedReplay
+from BLCR.utils.logging import Logger
+from BLCR.utils.seed import set_seed
 
 
 def choose_device(raw: str) -> torch.device:

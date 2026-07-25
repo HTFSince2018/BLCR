@@ -28,12 +28,10 @@ to the importance-corrected Bellman loss. The public method keys are `blcr` for 
 
 ## Repository Layout
 
-- `fluid/agents/`: MinAtar and vector-observation DQN trainers.
-- `fluid/replay/`: prioritized replay buffer and sum tree.
-- `fluid/train_blcr_sac.py`: SAC, PER-SAC, one-step ReLo-SAC, and BLCR-SAC.
+- `BLCR/agents/`: MinAtar and vector-observation DQN trainers.
+- `BLCR/replay/`: prioritized replay buffer and sum tree.
+- `BLCR/train_blcr_sac.py`: SAC, PER-SAC, one-step ReLo-SAC, and BLCR-SAC.
 - `configs/`: paper configurations for MinAtar, ALE-RAM, and classic control.
-- `scripts/`: complete experiment queues and result summarizers.
-- `analysis/generate_figures.py`: learning-curve generation from completed logs.
 - `docs/RESULTS_PROVENANCE.md`: provenance and integrity notes for reported results.
 
 ## Installation
@@ -49,66 +47,50 @@ AutoROM --accept-license
 
 If Atari ROMs are already installed, the final command is unnecessary. MuJoCo is installed through the Gymnasium extra; no separate MuJoCo license key is required by current Gymnasium releases.
 
-Run the lightweight MinAtar stub before launching long experiments:
-
-```bash
-python tests/smoke_minatar_stub.py
-```
-
 ## Reproducing Experiments
 
-All queue scripts accept `SEEDS`, `METHODS`, `MAX_PARALLEL`, `PYTHON_BIN`, and their domain-specific budget variables as environment overrides. They skip completed `result.pt` files by default.
-
-MinAtar, five games, five seeds, two million frames:
+MinAtar:
 
 ```bash
-bash scripts/run_minatar.sh
+python -m BLCR.train_minatar \
+  --config configs/minatar/blcr.yaml \
+  --game breakout \
+  --seed 0
 ```
 
-ALE-RAM, 30 games, ReLo versus BLCR, five seeds, two million frames:
+ALE-RAM:
 
 ```bash
-bash scripts/run_ale_ram.sh
+python -m BLCR.train_external_discrete \
+  --config configs/external/ale_ram_blcr.yaml \
+  --env-name Breakout-ram-v4 \
+  --seed 0
 ```
 
-Gymnasium classic control, four tasks, four methods, three seeds, one million steps:
+Gymnasium classic control:
 
 ```bash
-bash scripts/run_classic_control.sh
+python -m BLCR.train_external_discrete \
+  --config configs/external/gym_classic_control.yaml \
+  --env-name CartPole-v1 \
+  --algo blcr \
+  --seed 0
 ```
 
-MuJoCo locomotion, four tasks, four SAC replay variants, three seeds, 300K steps:
+MuJoCo locomotion:
 
 ```bash
-bash scripts/run_mujoco_300k.sh
-```
-
-For a short functional check, override the budget and task set:
-
-```bash
-GAMES="breakout" SEEDS="0" METHODS="relo blcr" NUM_FRAMES=100000 \
-  bash scripts/run_minatar.sh
+python -m BLCR.train_blcr_sac \
+  --env Hopper-v5 \
+  --method blcr_sac \
+  --seed 0 \
+  --total-steps 300000
 ```
 
 Monitor any run with TensorBoard:
 
 ```bash
 tensorboard --logdir logs_minatar_neurocomputing_2m
-```
-
-## Summaries and Figures
-
-```bash
-python scripts/summarize_discrete.py \
-  --logdir logs_minatar_neurocomputing_2m
-
-python scripts/summarize_ale_ram.py \
-  --logdir logs_ale_ram_30games
-
-python scripts/summarize_blcr_sac.py \
-  --logdir logs_blcr_sac_locomotion_300k
-
-python analysis/generate_figures.py
 ```
 
 The discrete primary metric is the per-seed mean return over the final 100 episodes. The MuJoCo tables use the final deterministic evaluation at the stated training step, averaged across seeds.
