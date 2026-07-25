@@ -30,7 +30,7 @@ class GymDiscreteVectorEnv:
         except ImportError as exc:
             raise ImportError(
                 "Gymnasium is required for Gym/ALE experiments. "
-                "Install optional dependencies with scripts/setup_external_envs.sh."
+                "Install the project dependencies with `pip install -r requirements.txt`."
             ) from exc
 
         if env_id.startswith("ALE/"):
@@ -41,7 +41,7 @@ class GymDiscreteVectorEnv:
             except ImportError as exc:
                 raise ImportError(
                     "ale_py is required for ALE experiments. "
-                    "Install optional dependencies with scripts/setup_external_envs.sh."
+                    "Install the project dependencies with `pip install -r requirements.txt`."
                 ) from exc
 
         self.env = gym.make(env_id, **(env_kwargs or {}))
@@ -89,7 +89,7 @@ class DMControlDiscreteVectorEnv:
         except ImportError as exc:
             raise ImportError(
                 "dm_control is required for DeepMind Control experiments. "
-                "Install optional dependencies with scripts/setup_external_envs.sh."
+                "Install it with `pip install dm-control`."
             ) from exc
 
         kwargs = dict(task_kwargs or {})

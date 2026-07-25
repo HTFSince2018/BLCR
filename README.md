@@ -1,42 +1,95 @@
 # BLCR
 
-Reference implementation of **Balanced Learnability-Coverage Replay (BLCR)** for the paper *Balancing Learnability and Bellman-Error Coverage in Prioritized Experience Replay*.
+Official reference implementation of **Balanced Learnability-Coverage Replay
+(BLCR)** for *Balancing Learnability and Bellman-Error Coverage in Prioritized
+Experience Replay*.
 
-BLCR is a conservative correction to reducible-loss prioritization (ReLo). ReLo remains the preferred ranking signal, while a compressed TD-error floor prevents difficult transitions from disappearing from replay:
+BLCR extends reducible-loss prioritization (ReLo) with a conservative coverage
+correction. ReLo favors transitions that can produce immediate learning
+progress, but it may repeatedly suppress transitions whose Bellman error
+remains high. BLCR retains the ReLo ranking signal while adding a bounded
+TD-error floor, so difficult yet informative experience cannot disappear from
+replay.
+
+## Method
+
+For transition \(i\), let \(R_i\) be its reducible-loss signal and
+\(D_i=|\delta_i|\) its absolute TD error. The signals are normalized by running
+scales \(m_R\) and \(m_D\):
 
 $$
-\widehat R_i=\operatorname{clip}\!\left(\frac{R_i}{m_R},0,c_{\max}\right),
+\widehat R_i =
+\operatorname{clip}\left(\frac{R_i}{m_R},0,c_{\max}\right),
 \qquad
-\widehat D_i=\operatorname{clip}\!\left(\frac{|\delta_i|}{m_D},0,c_{\max}\right),
+\widehat D_i =
+\operatorname{clip}\left(\frac{D_i}{m_D},0,c_{\max}\right).
 $$
 
-$$
-p_i^{\mathrm{BLCR}}
-=\operatorname{clip}\!\left(
-\max\{\widehat R_i,\lambda\log(1+\widehat D_i)\},
-p_{\min},p_{\max}\right).
-$$
-
-For a sampled transition, BLCR also applies a bounded learnability factor
+BLCR assigns the replay priority
 
 $$
-g_i=\operatorname{clip}\!\left(
-1+\eta\log(1+\widehat R_i^{\,\ell}),1,g_{\max}\right)
+p_i^{\mathrm{BLCR}} =
+\operatorname{clip}\left(
+\max\left\{\widehat R_i,\lambda\log(1+\widehat D_i)\right\},
+p_{\min},p_{\max}
+\right).
 $$
 
-to the importance-corrected Bellman loss. The public method keys are `blcr` for discrete control and `blcr_sac` for continuous control.
+The maximum preserves ReLo whenever its learnability estimate is sufficiently
+large. The logarithmic floor restores coverage when the ReLo signal is small,
+while compressing extreme TD errors. A bounded factor can also emphasize
+learnable samples in the importance-corrected Bellman objective:
+
+$$
+\mathcal L_{\mathrm{BLCR}} =
+\frac{1}{B}\sum_{i=1}^{B} w_i g_i\ell_i,
+\qquad
+g_i =
+\operatorname{clip}\left(
+1+\eta\log(1+\widehat R_i),1,g_{\max}
+\right),
+$$
+
+where \(w_i\) is the importance-sampling correction and \(\ell_i\) is the
+per-transition Bellman loss. The SAC adapter uses the normalized critic TD
+residual in the bounded loss factor and shares the same learnability-coverage
+priority structure.
+
+## Supported Experiments
+
+| Domain | Entry point | Methods |
+| --- | --- | --- |
+| MinAtar | `BLCR.train_minatar` | DQN, PER, ReLo, BLCR |
+| ALE with RAM observations | `BLCR.train_external_discrete` | DQN, PER, ReLo, BLCR |
+| Gymnasium classic control | `BLCR.train_external_discrete` | DQN, PER, ReLo, BLCR |
+| MuJoCo locomotion | `BLCR.train_blcr_sac` | SAC, PER-SAC, ReLo-SAC, BLCR-SAC |
+
+The public method keys are `blcr` for discrete control and `blcr_sac` for
+continuous control.
 
 ## Repository Layout
 
-- `BLCR/agents/`: MinAtar and vector-observation DQN trainers.
-- `BLCR/replay/`: prioritized replay buffer and sum tree.
-- `BLCR/train_blcr_sac.py`: SAC, PER-SAC, one-step ReLo-SAC, and BLCR-SAC.
-- `configs/`: paper configurations for MinAtar, ALE-RAM, and classic control.
-- `docs/RESULTS_PROVENANCE.md`: provenance and integrity notes for reported results.
+```text
+BLCR/
+|-- BLCR/
+|   |-- agents/       # DQN trainers
+|   |-- envs/         # Gymnasium and ALE environment adapters
+|   |-- models/       # Q-network definitions
+|   |-- replay/       # Replay buffer and sum-tree implementation
+|   |-- train_blcr_sac.py
+|   |-- train_external_discrete.py
+|   `-- train_minatar.py
+|-- configs/
+|   |-- external/
+|   `-- minatar/
+|-- environment.yml
+|-- requirements.txt
+`-- pyproject.toml
+```
 
 ## Installation
 
-The tested setup uses Python 3.11 and PyTorch 2.1 or newer.
+The tested environment uses Python 3.11 and PyTorch 2.1 or newer.
 
 ```bash
 conda env create -f environment.yml
@@ -45,11 +98,20 @@ pip install -e .
 AutoROM --accept-license
 ```
 
-If Atari ROMs are already installed, the final command is unnecessary. MuJoCo is installed through the Gymnasium extra; no separate MuJoCo license key is required by current Gymnasium releases.
+`AutoROM` is only required when Atari ROMs have not already been installed.
+Gymnasium supplies the current MuJoCo bindings; a separate MuJoCo license key
+is not required.
 
-## Reproducing Experiments
+Alternatively, install the Python dependencies directly:
 
-MinAtar:
+```bash
+pip install -r requirements.txt
+pip install -e .
+```
+
+## Quick Start
+
+Run BLCR on MinAtar Breakout:
 
 ```bash
 python -m BLCR.train_minatar \
@@ -58,26 +120,28 @@ python -m BLCR.train_minatar \
   --seed 0
 ```
 
-ALE-RAM:
+Run two million frames on ALE Breakout with RAM observations:
 
 ```bash
 python -m BLCR.train_external_discrete \
   --config configs/external/ale_ram_blcr.yaml \
-  --env-name Breakout-ram-v4 \
-  --seed 0
+  --algo blcr \
+  --seed 0 \
+  --override training.num_frames=2000000
 ```
 
-Gymnasium classic control:
+Run BLCR on Gymnasium CartPole:
 
 ```bash
 python -m BLCR.train_external_discrete \
   --config configs/external/gym_classic_control.yaml \
-  --env-name CartPole-v1 \
+  --env-name cartpole_v1 \
   --algo blcr \
-  --seed 0
+  --seed 0 \
+  --override env.id=CartPole-v1
 ```
 
-MuJoCo locomotion:
+Run BLCR-SAC on Hopper:
 
 ```bash
 python -m BLCR.train_blcr_sac \
@@ -87,18 +151,43 @@ python -m BLCR.train_blcr_sac \
   --total-steps 300000
 ```
 
-Monitor any run with TensorBoard:
+Configuration values can be changed without editing YAML files by repeating
+`--override key=value`. For example:
 
 ```bash
-tensorboard --logdir logs_minatar_neurocomputing_2m
+python -m BLCR.train_minatar \
+  --config configs/minatar/blcr.yaml \
+  --game asterix \
+  --seed 1 \
+  --override training.num_frames=1000000 \
+  --override system.device=cuda
 ```
 
-The discrete primary metric is the per-seed mean return over the final 100 episodes. The MuJoCo tables use the final deterministic evaluation at the stated training step, averaged across seeds.
+## Outputs
 
-## Continuous-Control Scope
+Discrete-control runs write `metrics.jsonl`, TensorBoard events, and `result.pt`
+under the configured log directory. Continuous-control runs store the same
+core artifacts under:
 
-The included `relo_sac` implementation uses realized one-step critic-loss reduction as its learnability proxy. This proxy is shared by `blcr_sac`, making their comparison controlled, but it is not a reproduction of the target-critic ReLo estimator used in the original ReLo SAC experiments. The paper reports this distinction explicitly.
+```text
+<logdir>/<environment>/<method>/seed<seed>/
+```
 
-## Research Integrity
+TensorBoard can monitor a run directory while training:
 
-Reported baseline values are read directly from completed run artifacts under a common aggregation rule. No baseline score is manually rescaled, lowered, or replaced. The ALE-RAM suite compares only ReLo and BLCR and therefore does not establish state-of-the-art ALE performance.
+```bash
+tensorboard --logdir logs
+```
+
+## Experimental Scope
+
+The discrete implementation contains the BLCR comparison paths used for
+MinAtar, ALE-RAM, and classic-control experiments. The continuous-control
+implementation compares replay variants within a common SAC training pipeline.
+Its `relo_sac` path estimates learnability from realized one-step critic-loss
+reduction; this controlled proxy is not presented as an exact reproduction of
+every estimator used in the original ReLo continuous-control experiments.
+
+Reported results should be aggregated from completed run artifacts with the
+same metric and seed policy for every method. No baseline score should be
+manually rescaled, lowered, or selectively replaced.
